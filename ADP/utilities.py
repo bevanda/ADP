@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class GUI(object):
+
     def __init__(self, master):
         self.master = master
         master.title("A simple GUI")
@@ -19,23 +20,35 @@ class GUI(object):
     def greet(self):
         print("Greetings!")
 
-def check(x, y, grid):
-    """Checking the type of square in the gridworld
-    grid - nested list
+def admissible_act(row, col, grid):
+    """Checking possible actions in the gridworld
+    and assigning it to a dict as a look-up table
     """
+    state_action={}
+    for r in range(row):
+        for c in range(col):
+            if not grid[r][c] == '1':
+                actions = ['idle']
+                if grid[r][c] != 'T' and grid[r][c] != 'G':
+                    if grid[r-1][c] != '1':
+                        actions.append('up')
+                    if grid[r+1][c] != '1':
+                        actions.append('down')
+                    if grid[r][c-1] != '1':
+                        actions.append('left')
+                    if grid[r][c+1] != '1':
+                        actions.append('right')
+                state_action[r, c] = actions
+    return state_action
 
-    print 'visiting %d,%d' % (x, y)
-
-    if grid[x][y] == '0':
-        print 'Free at %d,%d' % (x, y)
-
-    elif grid[x][y] == 'S':
-        print 'Start at %d,%d' % (x, y)
-
-    else:
-        print "No action possible from there"
+def modify_state(state, row = 0, col = 0):
+    lst = list(state)
+    lst[0] += row
+    lst[1] += col
+    return tuple(lst)
 
 def plots():
+
     x = np.arange(0, 5, 0.1)
     y = np.sin(x)
     plt.plot(x, y)
