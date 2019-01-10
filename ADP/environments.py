@@ -25,7 +25,7 @@ class Maze(object):
         self.count = len(self.arguments)
 
         if len(sys.argv) != 2:
-            self.file_name = "/home/petar/test_maze.txt"
+            self.file_name = "/home/petar/grid.txt"
             #raise Exception("Need two arguments: arg1:=script_name  arg2:=path_to_the_file!")
         else:
             self.file_name = self.arguments[0]
@@ -109,7 +109,7 @@ class Maze(object):
     def current_state(self, state_tuple):
         self._current_state = state_tuple
 
-    def next_state(self, state, action):
+    def nxt_state(self, state, action):
         """
         :param action: the action to take in the environment
         :type action: string
@@ -160,56 +160,56 @@ class Maze(object):
 
     def action_execution(self, action, p=0.1):
 
-        next_state = self.next_state(self.current_state, action)
-        action_available = self.grid_actions[next_state]
+        nxt_state = self.nxt_state(self.current_state, action)
+        action_available = self.grid_actions[nxt_state]
         if action == 'up' or action == 'down':
             if 'left' in action_available and 'right' in action_available:
                 if random.random() < (1 - 2 * p):
-                    self.current_state = next_state
+                    self.current_state = nxt_state
                 else:
                     if random.choice([True, False]):
                         # go diagonally left
-                        self.current_state = self.next_state(next_state, 'left')
+                        self.current_state = self.nxt_state(nxt_state, 'left')
                     else:
                         # go diagonally right
-                        self.current_state = self.next_state(next_state, 'right')
+                        self.current_state = self.nxt_state(nxt_state, 'right')
             else:
                 if 'left' in action_available:
                     if random.random() < (1 - 1 * p):
-                        self.current_state = next_state
+                        self.current_state = nxt_state
                     else:
-                        self.current_state = self.next_state(next_state, 'left')
+                        self.current_state = self.nxt_state(nxt_state, 'left')
                 elif 'right' in action_available:
                     if random.random() < (1 - 1 * p):
-                        self.current_state = next_state
+                        self.current_state = nxt_state
                     else:
-                        self.current_state = self.next_state(next_state, 'right')
+                        self.current_state = self.nxt_state(nxt_state, 'right')
                 else:
-                    self.current_state = next_state
+                    self.current_state = nxt_state
         elif action == 'left' or action == 'right':
             if 'up' in action_available and 'down' in action_available:
                 if random.random() < (1 - 2 * p):
-                    self.current_state = next_state
+                    self.current_state = nxt_state
                 else:
                     if random.choice([True, False]):
                         # go diagonally left
-                        self.current_state = self.next_state(next_state, 'up')
+                        self.current_state = self.nxt_state(nxt_state, 'up')
                     else:
                         # go diagonally right
-                        self.current_state = self.next_state(next_state, 'down')
+                        self.current_state = self.nxt_state(nxt_state, 'down')
             else:
                 if 'up' in action_available:
                     if random.random() < (1 - 1 * p):
-                        self.current_state = next_state
+                        self.current_state = nxt_state
                     else:
-                        self.current_state = self.next_state(next_state, 'up')
+                        self.current_state = self.nxt_state(nxt_state, 'up')
                 elif 'down' in action_available:
                     if random.random() < (1 - 1 * p):
-                        self.current_state = next_state
+                        self.current_state = nxt_state
                     else:
-                        self.current_state = self.next_state(next_state, 'down')
+                        self.current_state = self.nxt_state(nxt_state, 'down')
                 else:
-                    self.current_state = next_state
+                    self.current_state = nxt_state
 
     def rand_policy(self):
         """[S,A]"""
@@ -219,20 +219,21 @@ class Maze(object):
     @property
     def P_g(self):
         prob = 1
-        # cur_state = self.next_state(self.subs2idx(s)
+        # cur_state = self.nxt_state(self.subs2idx(s)
         # nxt_state = self.idx2subs(, self.actions[a])
         for s in range(self.num_states):
             #available_actions=self.subs2action(s)
             p = {}
+            r, c = self.subs2idx(s)
+            if self.grid_world[r][c] == 'G':
+                cost = 0
+            elif self.grid_world[r][c] == 'T':
+                cost = 50
+            else:
+                cost = 1
             for a in range(self.num_actions): #len(available_actions)
-                nxt_state_r, nxt_state_c = self.next_state(self.subs2idx(s), self.actions[a])
+                nxt_state_r, nxt_state_c = self.nxt_state(self.subs2idx(s), self.actions[a])
                 nxt_state = self.idx2subs((nxt_state_r, nxt_state_c))
-                if self.grid_world[nxt_state_r][nxt_state_c] == 'G':
-                    cost = -1
-                elif self.grid_world[nxt_state_r][nxt_state_c] == 'T':
-                    cost = 50
-                else:
-                    cost = 0
                 p[a] = [(prob, nxt_state, cost)]
             self._P_g[s] = p
         return self._P_g
