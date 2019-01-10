@@ -1,33 +1,20 @@
 from Tkinter import *
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import OrderedDict
+import seaborn as sns #for automatically plotting the gradient at the side
 
-
-class GUI(object):
-
-    def __init__(self, master):
-        self.master = master
-        master.title("A simple GUI")
-        self.label = Label(master, text="GUI!")
-        self.label.pack()
-        self.greet_button = Button(master, text="Greet", command=self.greet)
-        self.greet_button.pack()
-        self.close_button = Button(master, text="Close", command=master.quit)
-        self.close_button.pack()
-
-    def greet(self):
-        print("Greetings!")
-
+from typing import Dict, List, Tuple
 
 def admissible_act(row, col, grid):
     """
     Checking possible actions in the gridworld
     and assigning it to a dict as a look-up table
+    :rtype: tuple of grid_actions, state_grid
+
     """
 
-    grid_actions = {}
-    state_grid = []
+    grid_actions = {}  # type: Dict[Tuple[int, int], List[str]]
+    state_grid = []  # type: List[Tuple[int, int]]
     for r in range(row):
         for c in range(col):
             if not grid[r][c] == '1':
@@ -45,22 +32,30 @@ def admissible_act(row, col, grid):
                 state_grid.append((r, c))
     return grid_actions, state_grid
 
-
 def modify_state(state, row=0, col=0):
+    """Function for updating a tuple values"""
     lst = list(state)
     lst[0] += row
     lst[1] += col
     return tuple(lst)
 
+def heatmap(shape):
+    """
 
-# def check(self, action, p):
-#         # action transition probability
+    :type shape: tuple
+    """
+    row, col = shape
+    uniform_data = np.random.rand(row, col)
+    sns.heatmap(uniform_data, linewidth=0.5)
+    plt.show()
+
 
 def plots():
     x = np.arange(0, 5, 0.1)
     y = np.sin(x)
     plt.plot(x, y)
     return 0
+
 
 
 def print_dec(original_func):
@@ -79,7 +74,3 @@ class DecoratorClass(object):
 
     def __call__(self, *args, **kwargs):
         print('call method executed before {}'.format(self.original_func.__name__))
-
-# class Policy(states, actions):
-#     def __init__(self):
-#         pass

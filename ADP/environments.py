@@ -3,7 +3,6 @@ import sys
 from typing import Dict, List, Tuple, Any
 import random
 from ADP.utilities import *
-from Tkinter import *
 from itertools import chain  # for flattening the list efficiently
 from pprint import pprint
 
@@ -27,12 +26,12 @@ class Maze(object):
 
         if len(sys.argv) != 2:
             self.file_name = "/home/petar/test_maze.txt"
-            # raise Exception("Need two arguments: arg1:=script_name  arg2:=path_to_the_file!")
+            #raise Exception("Need two arguments: arg1:=script_name  arg2:=path_to_the_file!")
         else:
             self.file_name = self.arguments[0]
 
         self.grid_world = []  # type: List[Any]
-        self.actions = {
+        self._actions = {
             0: 'up',
             1: 'down',
             2: 'left',
@@ -44,8 +43,8 @@ class Maze(object):
         self.shape = None  # type: Tuple[int, int]
         self.grid_actions = None  # type: (Dict[Tuple[int, int], List[str]])
         self.state_grid = None  # type: (List[Tuple[int, int]])
-        self.current_state = None  # type: Tuple[int, int]
-        self.P = []  # type: (List[Tuple[int, int, int, int]])
+        self._current_state = None  # type: Tuple[int, int]
+        self._P_g = {}
         self.cost = []
         self.col = 0
         self.row = 0
@@ -103,14 +102,25 @@ class Maze(object):
         self.grid_actions, self.state_grid = admissible_act(self.row, self.col, self.grid_world)
 
     @property
-    def curr_state(self):
-        return self.current_state
+    def current_state(self):
+        return self._current_state
+
+    @current_state.setter
+    def current_state(self, state_tuple):
+        self._current_state = state_tuple
 
     def next_state(self, state, action):
-        # @state is a tuple
+        """
+        :param action: the action to take in the environment
+        :type action: string
+
+        :param state: the position of the agent in the maze (row, col)
+        :type state: tuple
+        """
+
         i = 0
         j = 0
-        acts = self.grid_actions.get(state)
+        acts = self.grid_actions[state]
         if action in acts:
             if action == 'up':
                 i = -1
@@ -128,7 +138,7 @@ class Maze(object):
         return modify_state(state, i, j)
 
     def subs2action(self, subs):
-        return self.grid_actions.get(self.subs2idx(subs))
+        return self.grid_actions[self.subs2idx(subs)]
 
     def subs2idx(self, subs):
         return self.state_grid[subs]
@@ -136,25 +146,25 @@ class Maze(object):
     def idx2subs(self, idx):
         return self.state_grid.index(idx)
 
-    def get_actions(self):
-        return self.actions
 
-    def set_actions(self, actions):
-        self.actions = actions
+    @property
+    def actions(self):
+        return self._actions
 
-    def run_gui(self):
-        root = Tk()
-        GUI(root)
-        root.mainloop()
+    @actions.setter
+    def actions(self, act):
+        self._actions = act
+
+    def back2start(self):
+        self.current_state = self.start_pos()
 
     def action_execution(self, action, p=0.1):
 
         next_state = self.next_state(self.current_state, action)
-        action_available = self.grid_actions.get(next_state)
-        rand = random.random()
+        action_available = self.grid_actions[next_state]
         if action == 'up' or action == 'down':
             if 'left' in action_available and 'right' in action_available:
-                if rand < (1 - 2 * p):
+                if random.random() < (1 - 2 * p):
                     self.current_state = next_state
                 else:
                     if random.choice([True, False]):
@@ -165,12 +175,12 @@ class Maze(object):
                         self.current_state = self.next_state(next_state, 'right')
             else:
                 if 'left' in action_available:
-                    if rand < (1 - 1 * p):
+                    if random.random() < (1 - 1 * p):
                         self.current_state = next_state
                     else:
                         self.current_state = self.next_state(next_state, 'left')
                 elif 'right' in action_available:
-                    if rand < (1 - 1 * p):
+                    if random.random() < (1 - 1 * p):
                         self.current_state = next_state
                     else:
                         self.current_state = self.next_state(next_state, 'right')
@@ -178,7 +188,7 @@ class Maze(object):
                     self.current_state = next_state
         elif action == 'left' or action == 'right':
             if 'up' in action_available and 'down' in action_available:
-                if rand < (1 - 2 * p):
+                if random.random() < (1 - 2 * p):
                     self.current_state = next_state
                 else:
                     if random.choice([True, False]):
@@ -189,30 +199,46 @@ class Maze(object):
                         self.current_state = self.next_state(next_state, 'down')
             else:
                 if 'up' in action_available:
-                    if rand < (1 - 1 * p):
+                    if random.random() < (1 - 1 * p):
                         self.current_state = next_state
                     else:
                         self.current_state = self.next_state(next_state, 'up')
                 elif 'down' in action_available:
-                    if rand < (1 - 1 * p):
+                    if random.random() < (1 - 1 * p):
                         self.current_state = next_state
                     else:
                         self.current_state = self.next_state(next_state, 'down')
                 else:
                     self.current_state = next_state
+
     def rand_policy(self):
         """[S,A]"""
         policy = np.ones([self.num_states, self.num_actions]) / self.num_actions
         return policy
 
-    def probability_transitions(self):
-        prob = 0
+    @property
+    def P_g(self):
+        prob = 1
+        # cur_state = self.next_state(self.subs2idx(s)
+        # nxt_state = self.idx2subs(, self.actions[a])
         for s in range(self.num_states):
-            tup_list = []
-            for a in range(self.num_actions):
-                tup_list.append((prob, self.idx2subs(self.next_state(self.subs2idx(s), self.actions.get(a)))))
-            self.P.append(tup_list)
-        #pprint(self.P)
+            #available_actions=self.subs2action(s)
+            p = {}
+            for a in range(self.num_actions): #len(available_actions)
+                nxt_state_r, nxt_state_c = self.next_state(self.subs2idx(s), self.actions[a])
+                nxt_state = self.idx2subs((nxt_state_r, nxt_state_c))
+                if self.grid_world[nxt_state_r][nxt_state_c] == 'G':
+                    cost = -1
+                elif self.grid_world[nxt_state_r][nxt_state_c] == 'T':
+                    cost = 50
+                else:
+                    cost = 0
+                p[a] = [(prob, nxt_state, cost)]
+            self._P_g[s] = p
+        return self._P_g
 
-    def back2start(self):
-        self.current_state = self.start_pos()
+    # # def visualisation(self):
+    # #     return 0
+    # #
+
+
