@@ -25,7 +25,7 @@ class Maze(object):
         self.count = len(self.arguments)
 
         if len(sys.argv) != 2:
-            self.file_name = "/home/petar/grid.txt"
+            self.file_name = "/home/petar/test_maze.txt"
             #raise Exception("Need two arguments: arg1:=script_name  arg2:=path_to_the_file!")
         else:
             self.file_name = self.arguments[0]
@@ -38,13 +38,19 @@ class Maze(object):
             3: 'right',
             4: 'idle'
         }
+        self.action_list =[
+            'up',
+            'down',
+            'left',
+            'right',
+            'idle']
         self.state_num = None
         self.act_num = None
         self.shape = None  # type: Tuple[int, int]
         self.grid_actions = None  # type: (Dict[Tuple[int, int], List[str]])
         self.state_grid = None  # type: (List[Tuple[int, int]])
         self._current_state = None  # type: Tuple[int, int]
-        self._P_g = {}
+        self.P_g = {}
         self.cost = []
         self.col = 0
         self.row = 0
@@ -55,6 +61,7 @@ class Maze(object):
         self._get_shape()
         self.start_pos()
         self._allowed_actions()
+        self.MRP()
         #self.probability_transitions()
 
     def _open_world(self):
@@ -109,7 +116,7 @@ class Maze(object):
     def current_state(self, state_tuple):
         self._current_state = state_tuple
 
-    def nxt_state(self, state, action):
+    def next_state(self, state, action):
         """
         :param action: the action to take in the environment
         :type action: string
@@ -117,7 +124,6 @@ class Maze(object):
         :param state: the position of the agent in the maze (row, col)
         :type state: tuple
         """
-
         i = 0
         j = 0
         acts = self.grid_actions[state]
@@ -130,14 +136,14 @@ class Maze(object):
                 j = -1
             elif action == 'right':
                 j = 1
-            elif action == 'idle':
-                pass
+            #elif action == 'idle':
+
         else:
             pass
             # print "No move made"
         return modify_state(state, i, j)
 
-    def subs2action(self, subs):
+    def possible_actions(self, subs):
         return self.grid_actions[self.subs2idx(subs)]
 
     def subs2idx(self, subs):
@@ -160,7 +166,7 @@ class Maze(object):
 
     def action_execution(self, action, p=0.1):
 
-        nxt_state = self.nxt_state(self.current_state, action)
+        nxt_state = self.next_state(self.current_state, action)
         action_available = self.grid_actions[nxt_state]
         if action == 'up' or action == 'down':
             if 'left' in action_available and 'right' in action_available:
@@ -169,21 +175,21 @@ class Maze(object):
                 else:
                     if random.choice([True, False]):
                         # go diagonally left
-                        self.current_state = self.nxt_state(nxt_state, 'left')
+                        self.current_state = self.next_state(nxt_state, 'left')
                     else:
                         # go diagonally right
-                        self.current_state = self.nxt_state(nxt_state, 'right')
+                        self.current_state = self.next_state(nxt_state, 'right')
             else:
                 if 'left' in action_available:
                     if random.random() < (1 - 1 * p):
                         self.current_state = nxt_state
                     else:
-                        self.current_state = self.nxt_state(nxt_state, 'left')
+                        self.current_state = self.next_state(nxt_state, 'left')
                 elif 'right' in action_available:
                     if random.random() < (1 - 1 * p):
                         self.current_state = nxt_state
                     else:
-                        self.current_state = self.nxt_state(nxt_state, 'right')
+                        self.current_state = self.next_state(nxt_state, 'right')
                 else:
                     self.current_state = nxt_state
         elif action == 'left' or action == 'right':
@@ -193,53 +199,41 @@ class Maze(object):
                 else:
                     if random.choice([True, False]):
                         # go diagonally left
-                        self.current_state = self.nxt_state(nxt_state, 'up')
+                        self.current_state = self.next_state(nxt_state, 'up')
                     else:
                         # go diagonally right
-                        self.current_state = self.nxt_state(nxt_state, 'down')
+                        self.current_state = self.next_state(nxt_state, 'down')
             else:
                 if 'up' in action_available:
                     if random.random() < (1 - 1 * p):
                         self.current_state = nxt_state
                     else:
-                        self.current_state = self.nxt_state(nxt_state, 'up')
+                        self.current_state = self.next_state(nxt_state, 'up')
                 elif 'down' in action_available:
                     if random.random() < (1 - 1 * p):
                         self.current_state = nxt_state
                     else:
-                        self.current_state = self.nxt_state(nxt_state, 'down')
+                        self.current_state = self.next_state(nxt_state, 'down')
                 else:
                     self.current_state = nxt_state
 
-    def rand_policy(self):
-        """[S,A]"""
-        policy = np.ones([self.num_states, self.num_actions]) / self.num_actions
-        return policy
+    def MRP(self):
 
-    @property
-    def P_g(self):
+        """Markov reward process"""
+
         prob = 1
-        # cur_state = self.nxt_state(self.subs2idx(s)
-        # nxt_state = self.idx2subs(, self.actions[a])
         for s in range(self.num_states):
-            #available_actions=self.subs2action(s)
             p = {}
-            r, c = self.subs2idx(s)
-            if self.grid_world[r][c] == 'G':
-                cost = 0
-            elif self.grid_world[r][c] == 'T':
-                cost = 50
-            else:
-                cost = 1
-            for a in range(self.num_actions): #len(available_actions)
-                nxt_state_r, nxt_state_c = self.nxt_state(self.subs2idx(s), self.actions[a])
+            for a, act in enumerate(self.possible_actions(s)):
+                an = self.action_list.index(act)
+                nxt_state_r, nxt_state_c = self.next_state(self.subs2idx(s), self.action_list[an])
                 nxt_state = self.idx2subs((nxt_state_r, nxt_state_c))
-                p[a] = [(prob, nxt_state, cost)]
-            self._P_g[s] = p
-        return self._P_g
-
-    # # def visualisation(self):
-    # #     return 0
-    # #
-
-
+                if self.grid_world[nxt_state_r][nxt_state_c] == 'G':
+                    cost = -1
+                elif self.grid_world[nxt_state_r][nxt_state_c] == 'T':
+                    cost = 50
+                else:
+                    cost = 0
+                p[an] = [(prob, nxt_state, cost)]
+            self.P_g[s] = p
+        return self.P_g

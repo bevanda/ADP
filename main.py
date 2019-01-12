@@ -10,12 +10,12 @@ import sys
 import matplotlib.pyplot as plt
 
 
-def value_iteration(env, epsilon=0.001, alpha=0.9):
+def value_iteration(env, epsilon=0.0001, alpha=0.9):
     """
     Value Iteration Algorithm.
 
     Args:
-        env: Maze environment for ADPRL course WS2018  env. env.P represents the transition probabilities of the environment.
+        env: Maze environment for ADPRL course WS2018  env. env.P_g represents the transition probabilities of the environment.
             env.P[s][a] is a list of transition tuples (prob, nxt_state, reward, done).
             env.num_states is a number of states in the environment.
             env.num_actions is a number of actions in the environment.
@@ -29,9 +29,10 @@ def value_iteration(env, epsilon=0.001, alpha=0.9):
     def one_step_lookahead(state, J):
 
         A = np.zeros(env.num_actions)
-        for a in range(env.num_actions):
-            for prob, nxt_state, cost in env.P_g[state][a]:
-                A[a] += prob * (cost + alpha * J[nxt_state])
+        for a, act in enumerate(env.possible_actions(state)):
+            an = env.action_list.index(act)
+            for prob, nxt_state, cost in env.P_g[state][an]:
+                A[an] += prob * (cost + alpha * J[nxt_state])
         return A
 
     J = np.zeros(env.num_states)
@@ -69,7 +70,7 @@ def value_iteration(env, epsilon=0.001, alpha=0.9):
 
 # Taken from Policy Evaluation Exercise!
 
-def policy_eval(policy, env, alpha=0.9, epsilon=0.001):
+def policy_eval(policy, env, alpha=0.9, epsilon=0.0001):
     """
     Evaluate a policy given an environment and a full description of the environment's dynamics.
 
@@ -93,9 +94,12 @@ def policy_eval(policy, env, alpha=0.9, epsilon=0.001):
         for s in range(env.num_states):
             v = 0
             # Look at the possible next actions
-            for a, action_prob in enumerate(policy[s]):
+            for a, act in enumerate(env.possible_actions(s)):
+            # for a, action_prob in enumerate(policy[s]):
                 # For each action, look at the possible next states...
-                for prob, nxt_state, cost in env.P_g[s][a]:
+                an = env.action_list.index(act)
+                action_prob = policy[s][an]
+                for prob, nxt_state, cost in env.P_g[s][an]:
                     # Calculate the expected value
                     v += action_prob * prob * (cost + alpha * J[nxt_state])
             # How much our value function changed (across any states)
@@ -108,6 +112,7 @@ def policy_eval(policy, env, alpha=0.9, epsilon=0.001):
 
 
 def policy_improvement(env, policy_eval_fn=policy_eval, alpha=0.9):
+
     """
     Policy Improvement Algorithm. Iteratively evaluates and improves a policy
     until an optimal policy is found.
@@ -137,10 +142,12 @@ def policy_improvement(env, policy_eval_fn=policy_eval, alpha=0.9):
         Returns:
             A vector of length env.num_actions containing the expected value of each action.
         """
+
         A = np.zeros(env.num_actions)
-        for a in range(env.num_actions):
-            for prob, nxt_state, cost in env.P_g[state][a]:
-                A[a] += prob * (cost + alpha * J[nxt_state])
+        for a, act in enumerate(env.possible_actions(state)):
+            an = env.action_list.index(act)
+            for prob, nxt_state, cost in env.P_g[state][an]:
+                A[an] += prob * (cost + alpha * J[nxt_state])
         return A
 
     # Start with a random policy
@@ -155,7 +162,7 @@ def policy_improvement(env, policy_eval_fn=policy_eval, alpha=0.9):
 
         # For each state...
         for s in range(env.num_states):
-            # The best action we would take under the currect policy
+            # The best action we would take under the current policy
             chosen_a = np.argmax(policy[s])
 
             # Find the best action by one-step lookahead
@@ -178,19 +185,23 @@ if __name__ == "__main__":
 
     env = Maze()
 
-    policy, value_function, VI_plot = value_iteration(env)
-    print VI_plot
+    policyVI, value_function, VI_plot = value_iteration(env)
+    print policyVI
     plt.plot(VI_plot)
     plt.show()
 
-    policy, value_function, PI_plot = policy_improvement(env)
-    print PI_plot
+    heatmap(env, value_function)
+
+    policyPI, value_function, PI_plot = policy_improvement(env)
+    print policyPI
     plt.plot(PI_plot)
     plt.show()
-    #print policy_improvement(env)
+    print policy_improvement(env)
 
 
+    heatmap(env, value_function)
 
+    print np.array_equal(policyPI, policyVI)
 
 
 
