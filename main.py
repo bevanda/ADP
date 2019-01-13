@@ -1,18 +1,6 @@
-# here is the main for running the algorithm
-from typing import Tuple
-import numpy as np
 from ADP.environments import *
-from ADP.algorithms import *
-from Tkinter import *
 from ADP.utilities import *
-# to load the absolute path of the .txt Maze into the
-import sys
-from pprint import pprint
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import matplotlib.colors as mcolors
-import matplotlib.colorbar as mcolorbar
-import math
 from numpy.random import *
 
 
@@ -33,9 +21,14 @@ def value_iteration(env, epsilon=0.0001, alpha=0.9):
         A tuple (policy, J) of the optimal policy and the optimal value function.
     """
 
-    def one_step_lookahead(state, J):
+    def lookahead(state, J):
 
-        A = np.zeros(env.num_actions)
+        #A = np.zeros(env.num_actions)
+        # INITIALISE ACTION DICTIONARY
+        A = {}
+        for _, a in enumerate(env.possible_actions(state)):
+            a_idx = env.action_list.index(a)
+            A[a_idx] = 0.0
         for _, act in enumerate(env.possible_actions(state)):
             an = env.action_list.index(act)
             for prob, nxt_state, cost in env.P_g[state][an]:
@@ -50,12 +43,14 @@ def value_iteration(env, epsilon=0.0001, alpha=0.9):
         # Update each state...
         for s in range(env.num_states):
             # Do a one-step lookahead to find the best action
-            A = one_step_lookahead(s, J)
-            best_action_value = np.min(A)
+            A = lookahead(s, J)
+            # min_action_cost = np.min(A)
+            min_action_cost = A[min(A, key=A.get)]
             # Calculate delta across all states seen so far
-            delta = max(delta, np.abs(best_action_value - J[s]))
+            delta = max(delta, np.abs(min_action_cost - J[s]))
+            # delta = max(delta, np.abs(min_action_cost - J[s]))
             # Update the value function. Ref: Sutton book eq. 4.10.
-            J[s] = best_action_value
+            J[s] = min_action_cost
             # Check if we can stop
         j_plot.append(np.linalg.norm(J))
 
@@ -66,8 +61,9 @@ def value_iteration(env, epsilon=0.0001, alpha=0.9):
     policy = np.zeros([env.num_states, env.num_actions])
     for s in range(env.num_states):
         # One step lookahead to find the best action for this state
-        A = one_step_lookahead(s, J)
-        best_action = np.argmin(A)
+        A = lookahead(s, J)
+        # best_action = np.argmin(A)
+        best_action = min(A, key=A.get)
         # Always take the best action
         policy[s, best_action] = 1.0
 
@@ -119,7 +115,7 @@ def policy_eval(policy, env, alpha=0.9, epsilon=0.0001):
 
 
 @timeit
-def policy_improvement(env, policy_eval_fn=policy_eval, alpha=0.9):
+def policy_iteration(env, policy_eval_fn=policy_eval, alpha=0.9):
 
     """
     Policy Improvement Algorithm. Iteratively evaluates and improves a policy
@@ -139,27 +135,23 @@ def policy_improvement(env, policy_eval_fn=policy_eval, alpha=0.9):
 
     """
 
-    def one_step_lookahead(state, J):
-        """
-        Helper function to calculate the value for all action in a given state.
+    def lookahead(state, J):
 
-        Args:
-            state: The state to consider (int)
-            J: The value to use as an estimator, Vector of length env.num_states
-
-        Returns:
-            A vector of length env.num_actions containing the expected value of each action.
-        """
-
-        A = np.zeros(env.num_actions)
+        #A = np.zeros(env.num_actions)
+        # INITIALISE ACTION DICTIONARY
+        A = {}
+        for _, a in enumerate(env.possible_actions(state)):
+            a_idx = env.action_list.index(a)
+            A[a_idx] = 0.0
         for _, act in enumerate(env.possible_actions(state)):
             an = env.action_list.index(act)
             for prob, nxt_state, cost in env.P_g[state][an]:
                 A[an] += prob * (cost + alpha * J[nxt_state])
         return A
 
-    # Start with a random policy
-    policy = np.ones([env.num_states, env.num_actions]) / env.num_actions
+
+    # Start with empty policy
+    policy = np.zeros([env.num_states, env.num_actions])
     j_plot = []
     while True:
         # Evaluate the current policy
@@ -175,8 +167,8 @@ def policy_improvement(env, policy_eval_fn=policy_eval, alpha=0.9):
 
             # Find the best action by one-step lookahead
             # Ties are resolved arbitarily
-            action_values = one_step_lookahead(s, J)
-            best_a = np.argmin(action_values)
+            action_values = lookahead(s, J)
+            best_a = min(action_values, key=action_values.get)
 
             # Greedily update the policy
             if chosen_a != best_a:
@@ -197,15 +189,15 @@ if __name__ == "__main__":
     plt.plot(VI_plot)
     plt.show()
 
-    heatmap(env, VI_cost_function, policyVI)
+    visualise(env, VI_cost_function, policyVI)
 
-    policyPI, PI_cost_function, PI_plot = policy_improvement(env, alpha=0.9)
+    policyPI, PI_cost_function, PI_plot = policy_iteration(env, alpha=0.9)
     plt.plot(PI_plot)
     plt.show()
 
-    heatmap(env, PI_cost_function, policyPI)
+    visualise(env, PI_cost_function, policyPI)
 
-    print 'The policies are equal?\n{}'.format(np.array_equal(policyPI, policyVI))
-    print 'The cost_functions are equal?\n{}'.format(np.array_equal(VI_cost_function, PI_cost_function))
+    print 'Policies equal?\n{}'.format(np.array_equal(policyPI, policyVI))
+    print 'Cost functions equal?\n{}'.format(np.array_equal(VI_cost_function, PI_cost_function))
 
 
