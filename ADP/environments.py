@@ -31,19 +31,14 @@ class Maze(object):
             self.file_name = self.arguments[0]
 
         self.grid_world = []  # type: List[Any]
-        self._actions = {
-            0: 'up',
-            1: 'down',
-            2: 'left',
-            3: 'right',
-            4: 'idle'
-        }
-        self.action_list =[
+        self.action_list = \
+            [
             'up',
             'down',
             'left',
             'right',
-            'idle']
+            'idle'
+            ]
         self.state_num = None
         self.act_num = None
         self.shape = None  # type: Tuple[int, int]
@@ -137,7 +132,6 @@ class Maze(object):
             elif action == 'right':
                 j = 1
             #elif action == 'idle':
-
         else:
             pass
             # print "No move made"
@@ -155,11 +149,11 @@ class Maze(object):
 
     @property
     def actions(self):
-        return self._actions
+        return self.action_list
 
     @actions.setter
     def actions(self, act):
-        self._actions = act
+        self.action_list = act
 
     def back2start(self):
         self.current_state = self.start_pos()
@@ -218,9 +212,7 @@ class Maze(object):
                     self.current_state = nxt_state
 
     def MRP(self):
-
         """Markov reward process"""
-
         prob = 1
         for s in range(self.num_states):
             p = {}

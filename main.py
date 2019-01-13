@@ -7,9 +7,16 @@ from Tkinter import *
 from ADP.utilities import *
 # to load the absolute path of the .txt Maze into the
 import sys
+from pprint import pprint
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
+import matplotlib.colorbar as mcolorbar
+import math
+from numpy.random import *
 
 
+@timeit
 def value_iteration(env, epsilon=0.0001, alpha=0.9):
     """
     Value Iteration Algorithm.
@@ -29,7 +36,7 @@ def value_iteration(env, epsilon=0.0001, alpha=0.9):
     def one_step_lookahead(state, J):
 
         A = np.zeros(env.num_actions)
-        for a, act in enumerate(env.possible_actions(state)):
+        for _, act in enumerate(env.possible_actions(state)):
             an = env.action_list.index(act)
             for prob, nxt_state, cost in env.P_g[state][an]:
                 A[an] += prob * (cost + alpha * J[nxt_state])
@@ -94,7 +101,7 @@ def policy_eval(policy, env, alpha=0.9, epsilon=0.0001):
         for s in range(env.num_states):
             v = 0
             # Look at the possible next actions
-            for a, act in enumerate(env.possible_actions(s)):
+            for _, act in enumerate(env.possible_actions(s)):
             # for a, action_prob in enumerate(policy[s]):
                 # For each action, look at the possible next states...
                 an = env.action_list.index(act)
@@ -111,6 +118,7 @@ def policy_eval(policy, env, alpha=0.9, epsilon=0.0001):
     return np.array(J)
 
 
+@timeit
 def policy_improvement(env, policy_eval_fn=policy_eval, alpha=0.9):
 
     """
@@ -144,7 +152,7 @@ def policy_improvement(env, policy_eval_fn=policy_eval, alpha=0.9):
         """
 
         A = np.zeros(env.num_actions)
-        for a, act in enumerate(env.possible_actions(state)):
+        for _, act in enumerate(env.possible_actions(state)):
             an = env.action_list.index(act)
             for prob, nxt_state, cost in env.P_g[state][an]:
                 A[an] += prob * (cost + alpha * J[nxt_state])
@@ -185,25 +193,19 @@ if __name__ == "__main__":
 
     env = Maze()
 
-    policyVI, value_function, VI_plot = value_iteration(env)
-    print policyVI
+    policyVI, VI_cost_function, VI_plot = value_iteration(env, alpha=0.9)
     plt.plot(VI_plot)
     plt.show()
 
-    heatmap(env, value_function)
+    heatmap(env, VI_cost_function, policyVI)
 
-    policyPI, value_function, PI_plot = policy_improvement(env)
-    print policyPI
+    policyPI, PI_cost_function, PI_plot = policy_improvement(env, alpha=0.9)
     plt.plot(PI_plot)
     plt.show()
-    print policy_improvement(env)
 
+    heatmap(env, PI_cost_function, policyPI)
 
-    heatmap(env, value_function)
-
-    print np.array_equal(policyPI, policyVI)
-
-
-
+    print 'The policies are equal?\n{}'.format(np.array_equal(policyPI, policyVI))
+    print 'The cost_functions are equal?\n{}'.format(np.array_equal(VI_cost_function, PI_cost_function))
 
 
