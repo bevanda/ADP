@@ -41,17 +41,20 @@ def modify_state(state, row=0, col=0):
 
 def visualise(env, V, policy):
     """
-
+    Visualising the policy and the underlying cost heat map
     """
-    data = np.zeros(shape=env.shape)
+    # data = np.zeros(shape=env.shape)
+    data = np.full(env.shape, np.nan)
     x=[]
     y=[]
     dx=[]
     dy=[]
+    # plt.figure(figsize=(4, 8))
     for i in range(len(V)):
         r, c = env.subs2idx(i)
         # - (np.max(V)+1) for normalising the grid
-        data[r][c] = V[i] - (np.max(V)+10)
+        # data[r][c] = V[i] - (np.max(V)+10)
+        data[r][c] = V[i]
         x.append(c)
         y.append(r)
         an = np.argmax(policy[i])
@@ -71,12 +74,16 @@ def visualise(env, V, policy):
         elif action == 'idle':
             dx.append(0)
             dy.append(0)
-    plt.figure()
-    plt.set_cmap('afmhot_r')
+    print V
+
+    plt.set_cmap('RdYlBu_r')
+    data = np.ma.masked_where(np.isnan(data), data)
+    cmap = plt.cm.get_cmap()
+    cmap.set_bad(color='black')
     costs = plt.imshow(data,
                        #origin='lower'
                        )
-    print data
+    # print data
     v = np.linspace(min(V), max(V), endpoint=True)
     plt.colorbar(costs,
                  #ticks=v
@@ -84,10 +91,24 @@ def visualise(env, V, policy):
 
     plt.quiver(x, y, dx, dy,
               angles='xy', scale_units='xy', scale=1.)
-    #plt.colorbar(costs)
-    plt.show()
+
+
+    return plt
+
+
+# def squared_dist(v1, v2):
+#     if len(v1) != len(v2):
+#         raise Exception("The two vectors need to have the same size")
+#     v = []
+#     for i in range(len(v1)):
+#         v[i] = pow(v1[i]-v2[i], 2)
+#     return v
+
+
+
 
 def timeit(method):
+    """Decorator for timing a code snippet"""
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)

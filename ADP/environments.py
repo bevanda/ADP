@@ -14,8 +14,7 @@ class Maze(object):
     S - start
 
     """
-
-    def __init__(self):
+    def __init__(self, g=1):
 
         self.program_name = sys.argv[0]
         self.arguments = sys.argv[1:]
@@ -53,7 +52,7 @@ class Maze(object):
         self._get_shape()
         self.start_pos()
         self._allowed_actions()
-        self.MRP()
+        self.MRP(g)
         # self.probability_transitions()
 
     def _open_world(self):
@@ -155,7 +154,7 @@ class Maze(object):
     def back2start(self):
         self.current_state = self.start_pos()
 
-    def MRP(self, g=1):
+    def MRP(self, g):
         for s in range(self.num_states):
             p = {}
             current_state = s
@@ -176,16 +175,20 @@ class Maze(object):
             else:
                 cost = 1
         else:
-            if self.grid_world[nS_r][nS_c]  == 'G':
-                cost = -1
-            elif self.grid_world[nS_r][nS_c]  == 'T':
+            if self.grid_world[nS_r][nS_c] == 'G':
+                if self.grid_world[cS_r][cS_c] == 'G':
+                    cost = 0
+                else:
+                    cost = -1
+
+            elif self.grid_world[nS_r][nS_c] == 'T':
                 cost = 50
             else:
                 cost = 0
 
         return cost
 
-    def action_probability(self, state_no, action_no, g=1, p=0.1):
+    def action_probability(self, state_no, action_no, g, p=0.1):
         pg =[]
         nxt_state = self.next_state(self.subs2idx(state_no), self.action_list[action_no])
         next_state_no = self.idx2subs(nxt_state)
