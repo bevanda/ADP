@@ -22,8 +22,8 @@ class Maze(object):
         self.count = len(self.arguments)
 
         if len(sys.argv) != 2:
-            self.file_name = "/home/petar/test_maze.txt"
-            # raise Exception("Need two arguments: arg1:=script_name  arg2:=path_to_the_file!")
+            # self.file_name = "/home/petar/test_maze.txt"
+            raise Exception("Need absolute path to file as argument!")
         else:
             self.file_name = self.arguments[0]
 
