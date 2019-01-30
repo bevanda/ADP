@@ -14,6 +14,7 @@ class Maze(object):
     S - start
 
     """
+
     def __init__(self, g=1):
 
         self.program_name = sys.argv[0]
@@ -21,19 +22,18 @@ class Maze(object):
         self.count = len(self.arguments)
 
         if len(sys.argv) != 2:
-            self.file_name = "/home/petar/test_maze.txt"
-            #raise Exception("Need two arguments: arg1:=script_name  arg2:=path_to_the_file!")
+            raise Exception("Two argument needed: arg1:=script_name  arg2:=path_to_the_file!")
         else:
             self.file_name = self.arguments[0]
 
         self.grid_world = []  # type: List[Any]
         self.action_list = \
             [
-            'up',
-            'down',
-            'left',
-            'right',
-            'idle'
+                'up',
+                'down',
+                'left',
+                'right',
+                'idle'
             ]
         self.state_num = None
         self.act_num = None
@@ -127,7 +127,7 @@ class Maze(object):
                 j = -1
             elif action == 'right':
                 j = 1
-            #elif action == 'idle':
+            # elif action == 'idle':
         else:
             pass
             # print "No move made"
@@ -137,11 +137,16 @@ class Maze(object):
         return self.grid_actions[self.subs2idx(subs)]
 
     def subs2idx(self, subs):
+        """
+        Conversion from the state num to the grid position (tuple)
+        """
         return self.state_grid[subs]
 
     def idx2subs(self, idx):
+        """
+        Conversion from the grid position (tuple) to the state num
+        """
         return self.state_grid.index(idx)
-
 
     @property
     def actions(self):
@@ -167,7 +172,7 @@ class Maze(object):
     def stage_cost(self, state_no, next_state_no, g):
         cS_r, cS_c = self.subs2idx(state_no)
         nS_r, nS_c = self.subs2idx(next_state_no)
-        if g==2:
+        if g == 2:
             if self.grid_world[cS_r][cS_c] == 'G' and self.grid_world[nS_r][nS_c] == 'G':
                 cost = 0
             elif self.grid_world[nS_r][nS_c] == 'T':
@@ -180,8 +185,6 @@ class Maze(object):
                     cost = 0
                 else:
                     cost = -1
-                # cost = -1
-
             elif self.grid_world[nS_r][nS_c] == 'T':
                 cost = 50
             else:
@@ -190,67 +193,67 @@ class Maze(object):
         return cost
 
     def action_probability(self, state_no, action_no, g, p=0.1):
-        pg =[]
+        pg = []
         nxt_state = self.next_state(self.subs2idx(state_no), self.action_list[action_no])
         next_state_no = self.idx2subs(nxt_state)
         action_available = self.grid_actions[nxt_state]
         action = self.action_list[action_no]
         if action == 'up' or action == 'down':
             if 'left' in action_available and 'right' in action_available:
-                cost = self.stage_cost( state_no, next_state_no, g)
-                pg.append((1-2*p, next_state_no, cost))
+                cost = self.stage_cost(state_no, next_state_no, g)
+                pg.append((1 - 2 * p, next_state_no, cost))
                 # go diagonally left
                 next_state_no = self.idx2subs(self.next_state(nxt_state, 'left'))
-                cost = self.stage_cost( state_no, next_state_no, g)
+                cost = self.stage_cost(state_no, next_state_no, g)
                 pg.append((p, next_state_no, cost))
                 # go diagonally right
                 next_state_no = self.idx2subs(self.next_state(nxt_state, 'right'))
-                cost = self.stage_cost( state_no, next_state_no, g)
+                cost = self.stage_cost(state_no, next_state_no, g)
                 pg.append((p, next_state_no, cost))
             else:
                 if 'left' in action_available:
-                    cost = self.stage_cost( state_no, next_state_no, g)
+                    cost = self.stage_cost(state_no, next_state_no, g)
                     pg.append((1 - p, next_state_no, cost))
                     # go diagonally left
                     next_state_no = self.idx2subs(self.next_state(nxt_state, 'left'))
-                    cost = self.stage_cost( state_no, next_state_no, g)
+                    cost = self.stage_cost(state_no, next_state_no, g)
                     pg.append((p, next_state_no, cost))
                 elif 'right' in action_available:
-                    cost = self.stage_cost( state_no, next_state_no, g)
-                    pg.append((1-p, next_state_no, cost))
+                    cost = self.stage_cost(state_no, next_state_no, g)
+                    pg.append((1 - p, next_state_no, cost))
                     # go diagonally left
                     next_state_no = self.idx2subs(self.next_state(nxt_state, 'right'))
-                    cost = self.stage_cost( state_no, next_state_no, g)
+                    cost = self.stage_cost(state_no, next_state_no, g)
                     pg.append((p, next_state_no, cost))
                 else:
-                    cost = self.stage_cost( state_no, next_state_no, g)
+                    cost = self.stage_cost(state_no, next_state_no, g)
                     pg.append((1, next_state_no, cost))
         elif action == 'left' or action == 'right':
             if 'up' in action_available and 'down' in action_available:
-                cost = self.stage_cost( state_no, next_state_no, g)
-                pg.append((1-2*p, next_state_no, cost))
+                cost = self.stage_cost(state_no, next_state_no, g)
+                pg.append((1 - 2 * p, next_state_no, cost))
                 # go diagonally left
                 next_state_no = self.idx2subs(self.next_state(nxt_state, 'up'))
-                cost = self.stage_cost( state_no, next_state_no, g)
+                cost = self.stage_cost(state_no, next_state_no, g)
                 pg.append((p, next_state_no, cost))
                 # go diagonally right
                 next_state_no = self.idx2subs(self.next_state(nxt_state, 'down'))
-                cost = self.stage_cost( state_no, next_state_no, g)
+                cost = self.stage_cost(state_no, next_state_no, g)
                 pg.append((p, next_state_no, cost))
             else:
                 if 'up' in action_available:
-                    cost = self.stage_cost( state_no, next_state_no, g)
+                    cost = self.stage_cost(state_no, next_state_no, g)
                     pg.append((1 - p, next_state_no, cost))
                     # go diagonally left
                     next_state_no = self.idx2subs(self.next_state(nxt_state, 'up'))
-                    cost = self.stage_cost( state_no, next_state_no, g)
+                    cost = self.stage_cost(state_no, next_state_no, g)
                     pg.append((p, next_state_no, cost))
                 elif 'down' in action_available:
-                    cost = self.stage_cost( state_no, next_state_no, g)
-                    pg.append((1-p, next_state_no, cost))
+                    cost = self.stage_cost(state_no, next_state_no, g)
+                    pg.append((1 - p, next_state_no, cost))
                     # go diagonally left
                     next_state_no = self.idx2subs(self.next_state(nxt_state, 'down'))
-                    cost = self.stage_cost( state_no, next_state_no, g)
+                    cost = self.stage_cost(state_no, next_state_no, g)
                     pg.append((p, next_state_no, cost))
                 else:
                     cost = self.stage_cost(state_no, next_state_no, g)

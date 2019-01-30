@@ -1,10 +1,11 @@
 from ADP.utilities import *
 from math import e
 from scipy.spatial import distance
+from random import choice
+
 
 @timeit
-def value_iteration(env, ref_cost, epsilon=e**-20, alpha=0.9):
-
+def value_iteration(env, reference_cost, epsilon=e ** -20, alpha=0.9):
     def lookahead(state, J):
         # INITIALISE ACTION DICTIONARY
         A = {}
@@ -36,7 +37,7 @@ def value_iteration(env, ref_cost, epsilon=e**-20, alpha=0.9):
             # Update the cost function
             J[s] = min_action_cost
             # Check if we can stop
-        J_m.append(distance.sqeuclidean(J, ref_cost))
+        J_m.append(distance.sqeuclidean(J, reference_cost))
 
         if delta < epsilon:
             break
@@ -54,8 +55,7 @@ def value_iteration(env, ref_cost, epsilon=e**-20, alpha=0.9):
     return policy, J, J_m
 
 
-def policy_eval(policy, env, alpha=0.9, epsilon=e**-20):
-
+def policy_eval(policy, env, alpha=0.9, epsilon=e ** -20):
     # Start with a random (e.g. all 0) value function
     J = np.zeros(env.num_states)
     while True:
@@ -81,8 +81,7 @@ def policy_eval(policy, env, alpha=0.9, epsilon=e**-20):
 
 
 @timeit
-def policy_iteration(env, ref_cost, policy_eval_fn=policy_eval, epsilon=e**-20, alpha=0.9):
-
+def policy_iteration(env, reference_cost, policy_eval_fn=policy_eval, epsilon=e ** -20, alpha=0.9):
     def lookahead(state, J):
 
         # INITIALISE ACTION DICTIONARY
@@ -96,8 +95,7 @@ def policy_iteration(env, ref_cost, policy_eval_fn=policy_eval, epsilon=e**-20, 
                 A[an] += prob * (cost + alpha * J[nxt_state])
         return A
 
-
-    # Start with empty policy
+    # Start with "empty" policy for better comparison of error plots
     policy = np.zeros([env.num_states, env.num_actions])
     J_m = []
     iter = 0
@@ -105,8 +103,8 @@ def policy_iteration(env, ref_cost, policy_eval_fn=policy_eval, epsilon=e**-20, 
         iter += 1
         # Evaluate the current policy
         J = policy_eval_fn(policy, env, alpha, epsilon=epsilon)
-        J_m.append(distance.sqeuclidean(J, ref_cost))
-        # J_m.append(np.linalg.norm(J, ref_cost))
+        J_m.append(distance.sqeuclidean(J, reference_cost))
+        # J_m.append(np.linalg.norm(J, reference_cost))
         # Will be set to false if we make any changes to the policy
         policy_stable = True
 
@@ -128,10 +126,3 @@ def policy_iteration(env, ref_cost, policy_eval_fn=policy_eval, epsilon=e**-20, 
         if policy_stable:
             print iter
             return policy, J, J_m
-
-
-
-
-
-
-
