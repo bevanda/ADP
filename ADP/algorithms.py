@@ -1,9 +1,9 @@
 from ADP.utilities import *
 from math import e
-
+from scipy.spatial import distance
 
 @timeit
-def value_iteration(env, epsilon=e**-20, alpha=0.9):
+def value_iteration(env, ref_cost, epsilon=e**-20, alpha=0.9):
 
     def lookahead(state, J):
         # INITIALISE ACTION DICTIONARY
@@ -18,8 +18,10 @@ def value_iteration(env, epsilon=e**-20, alpha=0.9):
         return A
 
     J = np.zeros(env.num_states)
-    j_plot = []
+    J_m = []
+    iter = 0
     while True:
+        iter += 1
         # Stopping condition
         delta = 0
         # Update each state...
@@ -34,7 +36,7 @@ def value_iteration(env, epsilon=e**-20, alpha=0.9):
             # Update the cost function
             J[s] = min_action_cost
             # Check if we can stop
-        j_plot.append(np.linalg.norm(J))
+        J_m.append(distance.sqeuclidean(J, ref_cost))
 
         if delta < epsilon:
             break
@@ -48,8 +50,8 @@ def value_iteration(env, epsilon=e**-20, alpha=0.9):
         best_action = min(A, key=A.get)
         # Always take the best action
         policy[s, best_action] = 1.0
-
-    return policy, J, j_plot
+    print iter
+    return policy, J, J_m
 
 
 def policy_eval(policy, env, alpha=0.9, epsilon=e**-20):
@@ -79,7 +81,7 @@ def policy_eval(policy, env, alpha=0.9, epsilon=e**-20):
 
 
 @timeit
-def policy_iteration(env, policy_eval_fn=policy_eval, epsilon=e**-20, alpha=0.9):
+def policy_iteration(env, ref_cost, policy_eval_fn=policy_eval, epsilon=e**-20, alpha=0.9):
 
     def lookahead(state, J):
 
@@ -97,11 +99,14 @@ def policy_iteration(env, policy_eval_fn=policy_eval, epsilon=e**-20, alpha=0.9)
 
     # Start with empty policy
     policy = np.zeros([env.num_states, env.num_actions])
-    j_plot = []
+    J_m = []
+    iter = 0
     while True:
+        iter += 1
         # Evaluate the current policy
         J = policy_eval_fn(policy, env, alpha, epsilon=epsilon)
-        j_plot.append(np.linalg.norm(J))
+        J_m.append(distance.sqeuclidean(J, ref_cost))
+        # J_m.append(np.linalg.norm(J, ref_cost))
         # Will be set to false if we make any changes to the policy
         policy_stable = True
 
@@ -121,7 +126,8 @@ def policy_iteration(env, policy_eval_fn=policy_eval, epsilon=e**-20, alpha=0.9)
 
         # If the policy is stable an optimal policy is found
         if policy_stable:
-            return policy, J, j_plot
+            print iter
+            return policy, J, J_m
 
 
 

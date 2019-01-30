@@ -180,6 +180,7 @@ class Maze(object):
                     cost = 0
                 else:
                     cost = -1
+                # cost = -1
 
             elif self.grid_world[nS_r][nS_c] == 'T':
                 cost = 50

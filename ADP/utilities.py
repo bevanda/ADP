@@ -95,9 +95,9 @@ def visualise(env, V, policy):
 
     return plt
 
-
-# def squared_dist(v1, v2):
-#     if len(v1) != len(v2):
+#
+# def squared_dist(m, v):
+#     if len() != len(v2):
 #         raise Exception("The two vectors need to have the same size")
 #     v = []
 #     for i in range(len(v1)):
