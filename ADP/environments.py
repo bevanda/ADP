@@ -22,7 +22,8 @@ class Maze(object):
         self.count = len(self.arguments)
 
         if len(sys.argv) != 2:
-            raise Exception("Two argument needed: arg1:=script_name  arg2:=path_to_the_file!")
+            self.file_name = "/home/petar/test_maze.txt"
+            # raise Exception("Need two arguments: arg1:=script_name  arg2:=path_to_the_file!")
         else:
             self.file_name = self.arguments[0]
 
@@ -137,15 +138,9 @@ class Maze(object):
         return self.grid_actions[self.subs2idx(subs)]
 
     def subs2idx(self, subs):
-        """
-        Conversion from the state num to the grid position (tuple)
-        """
         return self.state_grid[subs]
 
     def idx2subs(self, idx):
-        """
-        Conversion from the grid position (tuple) to the state num
-        """
         return self.state_grid.index(idx)
 
     @property

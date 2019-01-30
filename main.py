@@ -6,6 +6,8 @@ from numpy.random import *
 
 
 if __name__ == "__main__":
+    #******Runung alg to obtain ground truth*****
+
     env = Maze(g=1)
 
     smallest_num = np.nextafter(0, 1)
@@ -388,4 +390,46 @@ if __name__ == "__main__":
     plt.show()
     plt.plot(PI_J2_3)
     plt.title("Squared distance to ground truth PI $g_2$, $\\alpha=0.6$")
+    plt.show()
+
+    # *******Putting in the reference cost of ground truth into the 0.99 case *******
+
+    env = Maze(g=1)
+
+    smallest_num = np.nextafter(0, 1)
+
+    policyVI_ground_truth_g1, VI_cost_function_ground_truth_g1, VI_J2_ground_truth_1 = \
+        value_iteration(env, VI_cost_function_ground_truth_g1,
+                        epsilon=smallest_num,
+                        alpha=0.99)
+
+    policyPI_ground_truth_g1, PI_cost_function_ground_truth_g1, PI_J2_ground_truth_1 = \
+        policy_iteration(env, PI_cost_function_ground_truth_g1,
+                         epsilon=smallest_num,
+                         alpha=0.99)
+
+    plt.plot(VI_J2_ground_truth_1)
+    plt.title("Squared distance to ground truth VI $g_1$, $\\alpha=0.99$")
+    plt.show()
+    plt.plot(PI_J2_ground_truth_1)
+    plt.title("Squared distance to ground truth PI $g_1$, $\\alpha=0.99$")
+    plt.show()
+
+    env = Maze(g=2)
+
+    policyVI_ground_truth_g2, VI_cost_function_ground_truth_g2, VI_J2_ground_truth_2 = \
+        value_iteration(env, VI_cost_function_ground_truth_g2,
+                        epsilon=smallest_num,
+                        alpha=0.99)
+
+    policyPI_ground_truth_g2, PI_cost_function_ground_truth_g2, PI_J2_ground_truth_2 = \
+        policy_iteration(env, PI_cost_function_ground_truth_g2,
+                         epsilon=smallest_num,
+                         alpha=0.99)
+
+    plt.plot(VI_J2_ground_truth_2)
+    plt.title("Squared distance to ground truth VI $g_2$, $\\alpha=0.99$")
+    plt.show()
+    plt.plot(PI_J2_ground_truth_2)
+    plt.title("Squared distance to ground truth PI $g_2$, $\\alpha=0.99$")
     plt.show()
