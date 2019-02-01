@@ -1,2 +1,2 @@
 # ADP
-Approximate Dynamic Programming assignment solution for a maze environment fot the course ADPRL at TU Munich
+Approximate Dynamic Programming assignment solution for a maze environment for the course ADPRL at TU Munich
